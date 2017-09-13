@@ -1,0 +1,57 @@
+DECLARE @startDayMonth VARCHAR(4) = '0601'
+DECLARE @leaveDayMonth VARCHAR(4) = '0630'
+DECLARE @currentYear VARCHAR(4) = CONVERT(VARCHAR(4), Year(Getdate()))
+DECLARE @startDate DATE = CONVERT(DATE, @currentYear + @startDayMonth)
+
+/* set leaving years for all year groups based on the current year */
+DECLARE @SHYear VARCHAR(4) = CONVERT(VARCHAR(4), @currentYear + 5)
+DECLARE @REYear VARCHAR(4) = CONVERT(VARCHAR(4), @currentYear + 4)
+DECLARE @FifthsYear VARCHAR(4) = CONVERT(VARCHAR(4), @currentYear + 3)
+DECLARE @6BYear VARCHAR(4) = CONVERT(VARCHAR(4), @currentYear + 2)
+DECLARE @6AYear VARCHAR(4) = CONVERT(VARCHAR(4), @currentYear + 1)
+
+/* set leaving date for all year groups */
+DECLARE @SHLeave DATE = CONVERT(DATE, @SHYear + @leaveDayMonth)
+DECLARE @RELeave DATE = CONVERT(DATE, @REYear + @leaveDayMonth)
+DECLARE @FifthsLeave DATE = CONVERT(DATE, @FifthsYear + @leaveDayMonth)
+DECLARE @6BLeave DATE = CONVERT(DATE, @6BYear + @leaveDayMonth)
+DECLARE @6ALeave DATE = CONVERT(DATE, @6AYear + @leaveDayMonth)
+
+SELECT TblPupilManagementPupils.txtSchoolCode AS [RDRID (Reader ID)],
+
+	CASE TblPupilManagementPupils.intNCYear 
+		WHEN 9 THEN 'SH'
+		WHEN 10  THEN 'RE'
+		WHEN 11 THEN 'Fifths'
+		WHEN 12 THEN '6B'
+		WHEN 13 THEN '6A'
+	END AS [RCC (Reader Category Code)],
+
+	TblPupilManagementPupils.txtForename AS FORENAMES,
+
+	TblPupilManagementPupils.txtSurname AS SURNAME,
+
+	CONVERT(VARCHAR(10), TblPupilManagementPupils.txtDOB, 105) AS DOB,
+
+	TblPupilManagementPupils.txtGender AS SEX, TblPupilManagementPupils.txtBoardingHouse AS COURSES,
+
+	TblStaff_1.Initials AS TUTORS, TblStaff.Initials AS DEPTS,
+
+	'English' AS LNG, TblPupilManagementPupils.txtEmailAddress AS EMAIL,
+
+	CASE TblPupilManagementPupils.intNCYear
+		WHEN 9 THEN CONVERT(VARCHAR(10),@SHLeave, 105)
+		WHEN 10 THEN CONVERT(VARCHAR(10), @RELeave, 105)
+		WHEN 11 THEN CONVERT(VARCHAR(10), @FifthsLeave, 105)
+		WHEN 12 THEN CONVERT(VARCHAR(10), @6BLeave, 105)
+		WHEN 13 THEN CONVERT(VARCHAR(10), @6ALeave, 105)
+	END AS EXPIRYDATE
+
+FROM TblPupilManagementPupils INNER JOIN TblSchoolManagementHouses ON
+	TblPupilManagementPupils.txtBoardingHouse = TblSchoolManagementHouses.txtHouseName INNER JOIN TblStaff AS TblStaff_1 ON
+	TblSchoolManagementHouses.txtHouseMaster = TblStaff_1.User_Code INNER JOIN TblStaff ON
+	TblPupilManagementPupils.txtTutor = TblStaff.User_Code
+
+WHERE (TblPupilManagementPupils.txtEnrolmentDate >= @startDate)
+
+ORDER BY TblPupilManagementPupils.intNCYear, TblPupilManagementPupils.txtSurname
